@@ -2,7 +2,7 @@
 
 import sys
 import pickle
-sys.path.append("../tools/")
+sys.path.append("tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import test_classifier, dump_classifier_and_data
