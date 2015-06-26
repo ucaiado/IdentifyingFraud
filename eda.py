@@ -87,15 +87,32 @@ class Eda(object):
         g = sns.jointplot(s_xFeature, s_yFeature, data=df_plot, kind="reg",
          size=6)
 
-    def getLastDecile(self, s_feature):
+    def getDecile(self, s_feature, i_pos = -1):
         '''
         get the labels for the last decile in the data set, given a s_feature
         '''
         df = self.getData()
         df_t = df.ix[:, [s_feature]].astype("float")
         f_lastDecile = (df_t.quantile(np.arange(0.1,1.1,0.1)))
-        f_lastDecile = f_lastDecile.iloc[-1].values[0]
+        f_lastDecile = f_lastDecile.iloc[i_pos].values[0]
         return df.ix[(df_t>=f_lastDecile)[s_feature],[s_feature, "poi"]]
+
+    def describe(self):
+        '''
+        Return a  dataframe with the stats of all numeric data in the instance
+        dataset
+        '''
+        #filter out email feature
+        df = self.getData()
+        l_labels = [x for x in df.columns if x!="email_address"]
+        df_rtn = (df.ix[:,l_labels].astype(float).describe().T)
+        #format numbers
+        for key in df_rtn:
+            if key == "count": s_txt = '{:,.2f}'
+            else: s_txt = '{:,.0f}'
+            df_rtn[key] = df_rtn[key].map(s_txt.format)
+
+        return df_rtn
 
 
 
