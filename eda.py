@@ -115,5 +115,38 @@ class Eda(object):
         return df_rtn
 
 
+    def checkSummation(self):
+        '''
+        Return a dataframe with just the data points that presented any 
+        difference between the data and the summations
+        '''
+        df = self.getData()
+        #test the stock information
+        l_labels = [u'poi', u'restricted_stock', u'restricted_stock_deferred', 
+        u'exercised_stock_options', u'total_stock_value']
+        df_check = df.drop(['email_address'], axis =1)
+        df_check = df_check.astype(float)
+        df_check = df_check.ix[:,l_labels]
+        df_check['Delta'] = 0
+        df_check.Delta = df_check.ix[:,l_labels[1:-1]].sum(axis = 1)
+        df_check.Delta -= df_check.total_stock_value
+        df_check.fillna(0, inplace=True)
+        df_t1 = df_check[df_check.Delta!=0].T
+        #test payment information
+        l_label = [u'poi', u'bonus', u'deferral_payments', u'deferred_income', 
+        u'director_fees', u'expenses', u'loan_advances', u'long_term_incentive',
+        u'other',u'salary', u'total_payments']
+        df_check = df.drop(['email_address'], axis =1)
+        df_check = df_check.astype(float)
+        df_check = df_check.ix[:,l_label]
+        df_check['Delta'] = 0
+        df_check.Delta = df_check.ix[:,l_label[1:-1]].sum(axis = 1)
+        df_check.Delta -= df_check.total_payments
+        df_check.fillna(0, inplace=True)
+        df_t2 = df_check[df_check.Delta!=0].T
+
+        return df_t1, df_t2
+
+
 
 
