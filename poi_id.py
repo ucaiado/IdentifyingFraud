@@ -16,7 +16,14 @@ features_list = ['poi','salary'] # You will need to use more features
 data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
 
 ### Task 2: Remove outliers
+key_to_remove = ['TOTAL',"BELFER ROBERT","BHATNAGAR SANJAY"]
+for key in key_to_remove:
+    data_dict.pop(key)
+
 ### Task 3: Create new feature(s)
+
+
+
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict
 
@@ -30,8 +37,9 @@ labels, features = targetFeatureSplit(data)
 ### you'll need to use Pipelines. For more info:
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
+# Provided to give you a starting point. Try a varity of classifiers.
 from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()    # Provided to give you a starting point. Try a varity of classifiers.
+clf = GaussianNB()    
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script.

@@ -11,16 +11,6 @@ Created on 25/06/2015
 __author__='ucaiado'
 
 
-'''
-Begin of Help Functions
-'''
-
-
-'''
-End of Help Functions
-'''
-
-
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -33,6 +23,17 @@ from tester import test_classifier, dump_classifier_and_data
 
 sns.set_palette("deep", desat=.6)
 sns.set_context(rc={"figure.figsize": (8, 4)})
+
+
+'''
+Begin of Help Functions
+'''
+
+
+'''
+End of Help Functions
+'''
+
 
 
 class Eda(object):
