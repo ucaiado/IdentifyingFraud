@@ -112,6 +112,8 @@ class Eda(object):
             if key == "count": s_txt = '{:,.2f}'
             else: s_txt = '{:,.0f}'
             df_rtn[key] = df_rtn[key].map(s_txt.format)
+        #save the result as an attribute 
+        self.data_description = df_rtn
 
         return df_rtn
 
