@@ -16,10 +16,12 @@ import numpy as np
 import seaborn as sns
 import sys
 import pickle
+import matplotlib.pyplot as plt
 sys.path.append("tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
 from tester import test_classifier, dump_classifier_and_data
+
 
 sns.set_palette("deep", desat=.6)
 sns.set_context(rc={"figure.figsize": (8, 4)})
@@ -149,6 +151,48 @@ class Eda(object):
         df_t2 = df_check[df_check.Delta!=0].T
 
         return df_t1, df_t2
+
+    def excludeOutliers(self, l_outliers):
+        '''
+        Exclude the data pints in l_outliers
+        '''
+        df = self.getData()
+        df.drop(l_outliers, inplace= True)
+        self.setData(df)
+
+
+    def compareFeaturesCreated(self):
+        '''
+        plot the box plot of the new features that will be created, biggest_expenses
+        and percentual_exercised. Keep the results as attributes called new_feature_1
+        and new_feature_2
+        '''
+        #get a copy of the data
+        df = self.getData()
+        #compare the expenses to the biggest one
+        df_t2 = pd.DataFrame(df.expenses.astype(float)/df.expenses.astype(float).max())
+        df_t2.columns = ["biggest_expenses"]
+        df_t2["poi"]=df.poi
+        #exclude some points just to plot
+        df_t2 = df_t2[df_t2.biggest_expenses<0.80]
+
+        #compare the exercised stock options to total payment
+        l_features =  ['exercised_stock_options', 'total_payments']
+        df_t3 = pd.DataFrame(df[l_features[0]].astype(float)/ df[l_features[1]].astype(float))
+        #exclude some outliers just to this plot
+        df_t3.columns = ["percentual_exercised"]
+        df_t3["poi"]=df.poi
+        df_t3 = df_t3[df_t3.percentual_exercised!=df_t3.percentual_exercised.max()]
+        #plot the both camparitions in one figure
+        f, l_ax = plt.subplots(1,2)
+        ax1 = sns.boxplot(x="poi", y="biggest_expenses", data=df_t2, ax = l_ax[0]);
+        ax2 = sns.boxplot(x="poi", y="percentual_exercised", data=df_t3, ax = l_ax[1]);
+        ax2.set_title("Option Exercised Compared to\n Total Payments");
+        ax1.set_title("How far Is Each One From \nThe Biggest Expense");
+        f.tight_layout()
+        self.new_feature_1 =  df_t2
+        self.new_feature_2 =  df_t3
+
 
 
 
