@@ -47,6 +47,15 @@ class Eda(object):
         Initialize a Eda instance
         '''
         self._loadData()
+        self.payments_features = ['bonus', 'deferral_payments', 
+        'deferred_income', 'director_fees', 'expenses','loan_advances', 
+        'long_term_incentive', 'other','salary']
+        self.stock_features = ['exercised_stock_options','restricted_stock', 
+        'restricted_stock_deferred']
+        self.email_features = ['from_messages', 'from_poi_to_this_person',
+        'from_this_person_to_poi','shared_receipt_with_poi', 'to_messages']
+       
+
 
     def _loadData(self):
         '''
@@ -160,38 +169,66 @@ class Eda(object):
         df.drop(l_outliers, inplace= True)
         self.setData(df)
 
+    def fill_and_remove(self):
+        '''
+        fill all Nan values in numerical data with zeros and then remove data 
+        points that all features are equal to zero
+        '''
+        df = self.getData()
+        #filling Nan with 0 and exclude them
+        l_features = self.payments_features + self.stock_features 
+        l_features+= self.email_features
+        df.loc[:, l_features] = df.loc[:, l_features].astype(float)
+        df.loc[:, l_features] = df.loc[:, l_features].fillna(0)
+        df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
+        #saving the new dataframe       
+        self.setData(df)
+
 
     def compareFeaturesCreated(self):
         '''
-        plot the box plot of the new features that will be created, biggest_expenses
-        and percentual_exercised. Keep the results as attributes called new_feature_1
-        and new_feature_2
+        plot the box plot of the new features that will be created, 
+        biggest_expenses and percentual_exercised. Keep the results as 
+        attributes called new_feature_1 and new_feature_2
         '''
         #get a copy of the data
         df = self.getData()
-        #compare the expenses to the biggest one
-        df_t2 = pd.DataFrame(df.expenses.astype(float)/df.expenses.astype(float).max())
+        #compare the expenses to the biggest one scaling it
+        f_min = df.expenses.astype(float).min()
+        f_max = df.expenses.astype(float).max() 
+        df_t2 = (df.expenses.astype(float) - f_min)/(f_max - f_min)
+        df_t2 = pd.DataFrame(df_t2)
         df_t2.columns = ["biggest_expenses"]
         df_t2["poi"]=df.poi
         #exclude some points just to plot
         df_t2 = df_t2[df_t2.biggest_expenses<0.80]
-
         #compare the exercised stock options to total payment
         l_features =  ['exercised_stock_options', 'total_payments']
-        df_t3 = pd.DataFrame(df[l_features[0]].astype(float)/ df[l_features[1]].astype(float))
+        df_t3 = df[l_features[0]].astype(float)/df[l_features[1]].astype(float)
+        df_t3 = pd.DataFrame(df_t3)
+        #scale the new feature
+        f_min = df_t3.min()
+        f_max = df_t3.max()
+        df_t3 = (df_t3-f_min)/ (f_max - f_min)
         #exclude some outliers just to this plot
         df_t3.columns = ["percentual_exercised"]
         df_t3["poi"]=df.poi
-        df_t3 = df_t3[df_t3.percentual_exercised!=df_t3.percentual_exercised.max()]
+        f_max = df_t3.percentual_exercised.max()
+        df_t3 = df_t3[df_t3.percentual_exercised != f_max]
         #plot the both camparitions in one figure
         f, l_ax = plt.subplots(1,2)
-        ax1 = sns.boxplot(x="poi", y="biggest_expenses", data=df_t2, ax = l_ax[0]);
-        ax2 = sns.boxplot(x="poi", y="percentual_exercised", data=df_t3, ax = l_ax[1]);
+        ax1 = sns.boxplot(x="poi", y="biggest_expenses", 
+            data=df_t2, ax = l_ax[0]);
+        ax2 = sns.boxplot(x="poi", y="percentual_exercised",
+            data=df_t3, ax = l_ax[1]);
         ax2.set_title("Option Exercised Compared to\n Total Payments");
         ax1.set_title("How far Is Each One From \nThe Biggest Expense");
         f.tight_layout()
-        self.new_feature_1 =  df_t2
-        self.new_feature_2 =  df_t3
+        #include the new features in the original dataset
+        df['biggest_expenses'] = df_t2['biggest_expenses']
+        df["percentual_exercised"] = df_t3["percentual_exercised"]
+        self.setData(df)
+        self.new_features = ['biggest_expenses', 'percentual_exercised'] 
 
 
 

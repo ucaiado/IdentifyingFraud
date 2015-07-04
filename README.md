@@ -13,3 +13,4 @@ This project is  connected to the <a href="https://udacity.com/course/ud120-nd">
 - [Sample project](https://docs.google.com/document/d/1wCkOFWtGqOV7ira09NoZA7Otuf8SoUG2GuJUWmFbaQk/pub)
 - [Project description](https://docs.google.com/document/d/10GYepNkDj-Kc_Sf6to3WX_q_SdymPOBJf3H-pq7a62g/pub)
 - [The smartest guys in the room](https://www.youtube.com/watch?v=pRWXW87YrlM)
+- [Pandas and SciKit](http://www.markhneedham.com/blog/2013/11/09/python-making-scikit-learn-and-pandas-play-nice/)
