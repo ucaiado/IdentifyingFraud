@@ -200,8 +200,9 @@ class Eda(object):
         df_t2 = pd.DataFrame(df_t2)
         df_t2.columns = ["biggest_expenses"]
         df_t2["poi"]=df.poi
+        df_t2 = df_t2.fillna(0)
         #exclude some points just to plot
-        df_t2 = df_t2[df_t2.biggest_expenses<0.80]
+        df_t2_plot = df_t2[df_t2.biggest_expenses<0.80]
         #compare the exercised stock options to total payment
         l_features =  ['exercised_stock_options', 'total_payments']
         df_t3 = df[l_features[0]].astype(float)/df[l_features[1]].astype(float)
@@ -210,17 +211,18 @@ class Eda(object):
         f_min = df_t3.min()
         f_max = df_t3.max()
         df_t3 = (df_t3-f_min)/ (f_max - f_min)
+        df_t3 = df_t3.fillna(0)
         #exclude some outliers just to this plot
         df_t3.columns = ["percentual_exercised"]
         df_t3["poi"]=df.poi
         f_max = df_t3.percentual_exercised.max()
-        df_t3 = df_t3[df_t3.percentual_exercised != f_max]
+        df_t3_plot = df_t3[df_t3.percentual_exercised != f_max]
         #plot the both camparitions in one figure
         f, l_ax = plt.subplots(1,2)
         ax1 = sns.boxplot(x="poi", y="biggest_expenses", 
-            data=df_t2, ax = l_ax[0]);
+            data=df_t2_plot, ax = l_ax[0]);
         ax2 = sns.boxplot(x="poi", y="percentual_exercised",
-            data=df_t3, ax = l_ax[1]);
+            data=df_t3_plot, ax = l_ax[1]);
         ax2.set_title("Option Exercised Compared to\n Total Payments");
         ax1.set_title("How far Is Each One From \nThe Biggest Expense");
         f.tight_layout()
@@ -228,9 +230,30 @@ class Eda(object):
         df['biggest_expenses'] = df_t2['biggest_expenses']
         df["percentual_exercised"] = df_t3["percentual_exercised"]
         self.setData(df)
-        self.new_features = ['biggest_expenses', 'percentual_exercised'] 
+        self.new_features = ['biggest_expenses', 'percentual_exercised']
 
 
-
-
-
+    def scallingAll(self):
+        '''
+        Scale each group of features, keep the result as an attribute 
+        '''
+        #load data
+        df = self.getData()
+        l_payment = self.payments_features
+        l_stock = self.stock_features
+        l_email = self.email_features
+        #scale money related features
+        df_aux = df.loc[:,l_payment + l_stock]
+        f_max  = df_aux.max().max()
+        f_min = df_aux.min().min()
+        df_aux = (df_aux - f_min) * 1./(f_max - f_min)
+        df.loc[:,l_payment + l_stock] =   df_aux.values
+        #scale email features
+        df_aux = df.loc[:,l_email ]
+        f_max  = df_aux.max().max()
+        f_min = df_aux.min().min()
+        df_aux = (df_aux - f_min) * 1./(f_max - f_min)
+        df.loc[:,l_email ] =   df_aux.values
+        #keep results and show description
+        self.df_scaled = df
+        # df.loc[:,l_payment + l_stock + l_email].astype(float).describe().T
