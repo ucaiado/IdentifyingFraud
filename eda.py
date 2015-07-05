@@ -20,6 +20,7 @@ import matplotlib.pyplot as plt
 sys.path.append("tools/")
 
 from feature_format import featureFormat, targetFeatureSplit
+from sklearn.feature_selection import SelectPercentile, f_classif
 from tester import test_classifier, dump_classifier_and_data
 
 
@@ -40,7 +41,8 @@ End of Help Functions
 
 class Eda(object):
     '''
-    Load data and summarize it executing exploratory data analysis
+    Load, wrangle and summarize a given data set and execute a basic exploratory
+    data analysis
     '''
     def __init__(self):
         '''
@@ -65,11 +67,34 @@ class Eda(object):
         df = pd.DataFrame(data_dict).T
         self.df = df
 
-    def getData(self):
+
+    def getFeaturesList(self):
+        '''
+        Return a list of columns names from the self data
+        '''
+
+        return list(self.df.columns)
+
+    def getData(self, scaled = False):
         '''
         get a copy of the data set from this instance
+        scaled: boolean. Get scaled or non scaled dataframe
         '''
-        return self.df.copy()
+        if scaled: return self.df_scaled.copy()
+        else: return self.df.copy()
+
+    def getFeaturesAndLabels(self, scaled = False):
+        '''
+        Return two nuumpy arrays with labels and features splitted
+        '''
+        #load data needed
+        df = self.getData(scaled = scaled)
+        l_columns = self.payments_features + self.stock_features 
+        l_columns+=  self.email_features
+        #split data
+        na_labels = df.poi.values
+        na_features = df.loc[:,l_columns].values
+        return na_labels, na_features
 
     def setData(self, df):
         '''
@@ -184,12 +209,10 @@ class Eda(object):
         #saving the new dataframe       
         self.setData(df)
 
-
-    def compareFeaturesCreated(self):
+    def createNewFeatures(self):
         '''
-        plot the box plot of the new features that will be created, 
-        biggest_expenses and percentual_exercised. Keep the results as 
-        attributes called new_feature_1 and new_feature_2
+        create the features biggest_expenses and percentual_exercised. Save them
+        as new columns in df attribute
         '''
         #get a copy of the data
         df = self.getData()
@@ -201,8 +224,6 @@ class Eda(object):
         df_t2.columns = ["biggest_expenses"]
         df_t2["poi"]=df.poi
         df_t2 = df_t2.fillna(0)
-        #exclude some points just to plot
-        df_t2_plot = df_t2[df_t2.biggest_expenses<0.80]
         #compare the exercised stock options to total payment
         l_features =  ['exercised_stock_options', 'total_payments']
         df_t3 = df[l_features[0]].astype(float)/df[l_features[1]].astype(float)
@@ -215,6 +236,30 @@ class Eda(object):
         #exclude some outliers just to this plot
         df_t3.columns = ["percentual_exercised"]
         df_t3["poi"]=df.poi
+        #include the new features in the original dataset
+        df['biggest_expenses'] = df_t2['biggest_expenses']
+        df["percentual_exercised"] = df_t3["percentual_exercised"]
+        self.setData(df)
+        #save the list of new features names
+        self.new_features = ['biggest_expenses', 'percentual_exercised']
+
+
+    def compareFeaturesCreated(self):
+        '''
+        plot the box plot of the new features that will be created, 
+        biggest_expenses and percentual_exercised. Keep the results as 
+        attributes called new_feature_1 and new_feature_2
+        '''
+        #get a copy of the data
+        df = self.getData()
+        #load biggest expenses feature
+        df_t2 = df.loc[:,["biggest_expenses", "poi"]]
+        df_t2 = df_t2.fillna(0)
+        #exclude some points just to plot
+        df_t2_plot = df_t2[df_t2.biggest_expenses<0.80]
+        #load percentual_exercised feature
+        df_t3 = df.loc[:,["percentual_exercised", "poi"]]
+        df_t3 = df_t3.fillna(0)        
         f_max = df_t3.percentual_exercised.max()
         df_t3_plot = df_t3[df_t3.percentual_exercised != f_max]
         #plot the both camparitions in one figure
@@ -226,11 +271,6 @@ class Eda(object):
         ax2.set_title("Option Exercised Compared to\n Total Payments");
         ax1.set_title("How far Is Each One From \nThe Biggest Expense");
         f.tight_layout()
-        #include the new features in the original dataset
-        df['biggest_expenses'] = df_t2['biggest_expenses']
-        df["percentual_exercised"] = df_t3["percentual_exercised"]
-        self.setData(df)
-        self.new_features = ['biggest_expenses', 'percentual_exercised']
 
 
     def scallingAll(self):
