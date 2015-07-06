@@ -38,6 +38,34 @@ End of Help Functions
 '''
 
 
+def selectFeatures(features, labels, features_list):
+    '''
+    Select features according to the 20th percentile of the highest scores. 
+    Return a list of features selected  and a dataframe showing the ranking 
+    of each feature related to their p values
+    features: numpy array with the features to be used to test sklearn models
+    labels: numpy array with the real output 
+    features_list: a list of names of each feature
+    '''
+    #feature selection
+    selector = SelectPercentile(f_classif, percentile=20)
+    selector.fit(features, labels)
+    features_transformed = selector.transform(features)
+    #filter names to be returned
+    l_rtn = [x for x, t in zip(features_list, 
+        list(selector.get_support())) if t]
+    # pd.DataFrame(features_transformed, columns = l_labels2).head()
+    #calculate scores
+    scores = -np.log10(selector.pvalues_)
+    scores /= scores.max()
+    df_rtn = pd.DataFrame(pd.Series(dict(zip(features_list,scores))))
+    df_rtn.columns = ["pValue_Max"]
+    df_rtn = df_rtn.sort("pValue_Max", ascending=False)
+    # df_rtn["different_from_zero"]=((df!=0).sum()*1./df.shape[0])
+
+
+    return l_rtn, df_rtn
+
 
 class Eda(object):
     '''
@@ -68,12 +96,20 @@ class Eda(object):
         self.df = df
 
 
-    def getFeaturesList(self):
+    def getFeaturesList(self, f_validNumMin = 0.):
         '''
         Return a list of columns names from the self data
+        f_validNumMin: float with the minimum percentual of valid numbers in 
+        each feature to be tested
         '''
+        l_columns = self.payments_features + self.stock_features 
+        l_columns+=  self.email_features + self.new_features
+        df_rtn = self.notValidNumbersTable()
+        na_exclude = (df_rtn.T<f_validNumMin).values
+        l_exclude = list(df_rtn.loc[list(na_exclude)[0]].index)        
+        l_rtn = [ x for x in l_columns if x not in l_exclude]        
 
-        return list(self.df.columns)
+        return l_rtn
 
     def getData(self, scaled = False):
         '''
@@ -83,17 +119,19 @@ class Eda(object):
         if scaled: return self.df_scaled.copy()
         else: return self.df.copy()
 
-    def getFeaturesAndLabels(self, scaled = False):
+    def getFeaturesAndLabels(self, scaled = False, f_validNumMin = 0.):
         '''
         Return two nuumpy arrays with labels and features splitted
+        scaled: boolean. should return scaled features?
+        f_validNumMin: float with the minimum percentual of a valid number from
+        a feature to be tested
         '''
         #load data needed
         df = self.getData(scaled = scaled)
-        l_columns = self.payments_features + self.stock_features 
-        l_columns+=  self.email_features
+        l_columns = self.getFeaturesList(f_validNumMin=f_validNumMin)
         #split data
-        na_labels = df.poi.values
-        na_features = df.loc[:,l_columns].values
+        na_labels = df.poi.values.astype(np.float32)
+        na_features = df.loc[:,l_columns].values.astype(np.float32)
         return na_labels, na_features
 
     def setData(self, df):
@@ -208,6 +246,17 @@ class Eda(object):
         df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
         #saving the new dataframe       
         self.setData(df)
+
+    def notValidNumbersTable(self):
+        '''
+        Return a dataframe with the percentual of not NaN values in the data 
+        set
+        '''
+        df = self.getData()
+        df_rtn = pd.DataFrame(((df!=0).sum()*1./df.shape[0]))
+        df_rtn.columns=["ValidNumbers"]
+        df_rtn = df_rtn.sort("ValidNumbers", ascending=False)
+        return df_rtn            
 
     def createNewFeatures(self):
         '''
