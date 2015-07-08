@@ -70,7 +70,7 @@ def selectFeatures(features, labels, features_list):
     return l_rtn, df_rtn
 
 
-def split_train_test(features, labels):
+def split_train_test(features, labels, folds = 1000):
     '''
     Return the data set passed splited in train and test set
     features: numpy array with the features to be used to test sklearn models
@@ -112,6 +112,7 @@ class Eda(object):
         'restricted_stock_deferred']
         self.email_features = ['from_messages', 'from_poi_to_this_person',
         'from_this_person_to_poi','shared_receipt_with_poi', 'to_messages']
+        self.df_scaled = []
        
 
 
@@ -129,6 +130,7 @@ class Eda(object):
         Return a list of columns names from the self data
         f_validNumMin: float with the minimum percentual of valid numbers in 
         each feature to be tested
+        l_columns: target features to be filtered. If any, use all.
         '''
         l_columns = self.payments_features + self.stock_features 
         l_columns+=  self.email_features + self.new_features
@@ -147,16 +149,19 @@ class Eda(object):
         if scaled: return self.df_scaled.copy()
         else: return self.df.copy()
 
-    def getFeaturesAndLabels(self, scaled = False, f_validNumMin = 0.):
+    def getFeaturesAndLabels(self, l_columns = False, scaled = False,
+        f_validNumMin = 0.):
         '''
         Return two nuumpy arrays with labels and features splitted
         scaled: boolean. should return scaled features?
         f_validNumMin: float with the minimum percentual of a valid number from
         a feature to be tested
+        l_columns: target features to be filtered. If any, use all.
         '''
         #load data needed
         df = self.getData(scaled = scaled)
-        l_columns = self.getFeaturesList(f_validNumMin=f_validNumMin)
+        if not l_columns:
+            l_columns = self.getFeaturesList(f_validNumMin=f_validNumMin)
         #split data
         na_labels = df.poi.values.astype(np.float32)
         na_features = df.loc[:,l_columns].values.astype(np.float32)
@@ -260,20 +265,28 @@ class Eda(object):
         df.drop(l_outliers, inplace= True)
         self.setData(df)
 
-    def fill_and_remove(self):
+    def fill_and_remove(self, l_features = False):
         '''
         fill all Nan values in numerical data with zeros and then remove data 
         points that all features are equal to zero
+        l_features: a list of features to be tested. If any, all features will 
+        be used
         '''
         df = self.getData()
         #filling Nan with 0 and exclude them
-        l_features = self.payments_features + self.stock_features 
-        l_features+= self.email_features
+        if not l_features:
+            l_features = self.payments_features + self.stock_features 
+            l_features+= self.email_features
         df.loc[:, l_features] = df.loc[:, l_features].astype(float)
         df.loc[:, l_features] = df.loc[:, l_features].fillna(0)
         df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
         #saving the new dataframe       
         self.setData(df)
+        #correct scaled df
+        if type(self.df_scaled)!=list:
+            df2 = self.df_scaled
+            df2 = df2.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0).index,:]
+            self.df_scaled = df2
 
     def notValidNumbersTable(self):
         '''
