@@ -61,6 +61,15 @@ class LoadEnron:
         if scaled: return self.df_scaled.copy()
         else: return self.df.copy()
 
+    def getValue(self, key, column, scaled = False):
+        '''
+        get the value of a specific datapoint, given the key and a column's name
+        '''
+        if scaled: 
+            return self.df_scaled.loc[key, column]
+        else: 
+            return self.df.loc[key, column]
+
     def setData(self, df):
         '''
         Set a new data set to this instance
@@ -76,12 +85,13 @@ class LoadEnron:
         df.drop(l_outliers, inplace= True)
         self.setData(df)
 
-    def fill_and_remove(self, l_features = False):
+    def fill_and_remove(self, l_features = False, b_remove = True):
         '''
         fill all Nan values in numerical data with zeros and then remove data 
         points that all features are equal to zero
         l_features: a list of features to be tested. If any, all features will 
         be used
+        b_remove: boolean indicating if should remove keys where all data is 0
         '''
         df = self.getData()
         #filling Nan with 0 and exclude them
@@ -90,7 +100,8 @@ class LoadEnron:
             l_features+= self.email_features
         df.loc[:, l_features] = df.loc[:, l_features].astype(float)
         df.loc[:, l_features] = df.loc[:, l_features].fillna(0)
-        df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
+        if b_remove:
+            df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
         #saving the new dataframe       
         self.setData(df)
         #correct scaled df

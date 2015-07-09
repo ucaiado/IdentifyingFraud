@@ -10,7 +10,7 @@ from tester import test_classifier, dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi','salary'] # You will need to use more features
+features_list = ['poi', 'bonus', 'salary', 'exercised_stock_options']
 
 ### Load the dictionary containing the dataset
 data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
@@ -21,7 +21,22 @@ for key in key_to_remove:
     data_dict.pop(key)
 
 ### Task 3: Create new feature(s)
+#### Load the classes created to this project
+import dataset
+import featureSelection
 
+o_enron = dataset.LoadEnron()
+o_features = featureSelection.Features()
+#### Clean the data set to look like data_dict
+l_exclude = ["BELFER ROBERT","BHATNAGAR SANJAY", "TOTAL"]
+o_enron.excludeOutliers(l_outliers =  l_exclude)
+o_enron.fill_and_remove(b_remove = False)
+o_features.createNewFeatures(o_enron)
+
+####insert features created in data_dict
+for key in my_dataset:
+    for new_feature in ['biggest_expenses', 'percentual_exercised']:
+        my_dataset[key][new_feature] = o_enron.getValue(key, new_feature)
 
 
 ### Store to my_dataset for easy export below.
@@ -38,14 +53,22 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Provided to give you a starting point. Try a varity of classifiers.
+#### Different classifiers were tested in ipython notebook named Report. Please,
+#### check it out.
 from sklearn.naive_bayes import GaussianNB
 clf = GaussianNB()    
+
+
+
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script.
 ### Because of the small size of the dataset, the script uses stratified
 ### shuffle split cross validation. For more info: 
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
+
+
+
 
 test_classifier(clf, my_dataset, features_list)
 
