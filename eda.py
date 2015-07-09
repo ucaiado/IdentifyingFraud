@@ -2,10 +2,10 @@
 # -*- coding: utf-8 -*-
 
 '''
-Explore data that will be used in the project
+Explore and clean the data that will be used in the project
 
 
-Created on 25/06/2015
+Created on 06/25/2015
 '''
 
 __author__='ucaiado'
@@ -68,31 +68,6 @@ def selectFeatures(features, labels, features_list):
 
 
     return l_rtn, df_rtn
-
-
-def split_train_test(features, labels, folds = 1000):
-    '''
-    Return the data set passed splited in train and test set
-    features: numpy array with the features to be used to test sklearn models
-    labels: numpy array with the real output     
-    '''
-    # data = featureFormat(dataset, feature_list, sort_keys = True)
-    # labels, features = targetFeatureSplit(data)
-    cv = StratifiedShuffleSplit(labels, folds, random_state = 42)
-    for train_idx, test_idx in cv: 
-        features_train = []
-        features_test  = []
-        labels_train   = []
-        labels_test    = []
-        for ii in train_idx:
-            features_train.append( features[ii] )
-            labels_train.append( labels[ii] )
-        for jj in test_idx:
-            features_test.append( features[jj] )
-            labels_test.append( labels[jj] )
-
-    return  features_train, labels_train, features_test, labels_test
-
 
 
 class Eda(object):
