@@ -34,9 +34,9 @@ o_enron.fill_and_remove(b_remove = False)
 o_features.createNewFeatures(o_enron)
 
 ####insert features created in data_dict
-for key in my_dataset:
+for key in data_dict:
     for new_feature in ['biggest_expenses', 'percentual_exercised']:
-        my_dataset[key][new_feature] = o_enron.getValue(key, new_feature)
+        data_dict[key][new_feature] = o_enron.getValue(key, new_feature)
 
 
 ### Store to my_dataset for easy export below.
