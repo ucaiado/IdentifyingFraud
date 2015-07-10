@@ -18,7 +18,8 @@ from sklearn.metrics import recall_score
 from sklearn.cross_validation import StratifiedShuffleSplit
 
 #create string to print the results
-s = "\nClassification Report\n------------------\n"
+s = "\nClassifier Used\n------------------\n{}\n"
+s+= "\nClassification Report\n------------------\n"
 s+= "Accuracy: {:>0.{display_precision}f}\tPrecision: {:>0.{display_precision}f}"
 s+= "\tRecall: {:>0.{display_precision}f}\tF1: {:>0.{display_precision}f}\t"
 s+= "F2: {:>0.{display_precision}f}\n"
@@ -81,9 +82,8 @@ def test_classifier(clf, features, labels, folds = 1000):
                  "false_negatives": false_negatives,
                  "true_negatives": true_negatives
                 }
-        # print clf
-        print clf
-        print PERF_FORMAT_STRING.format(accuracy, precision, recall, f1, f2, display_precision = 5)
+        
+        print PERF_FORMAT_STRING.format(clf, accuracy, precision, recall, f1, f2, display_precision = 5)
         print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
         print ""
 
