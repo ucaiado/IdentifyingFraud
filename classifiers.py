@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Load different classifiers to be tested
+Load and different classifiers
 
 
 Created on 07/09/2015
@@ -74,6 +74,10 @@ class Params:
         classifiers
         '''
 
+        d_params = dict(reduce_dim__n_components=[1, 2, 3],
+                        DecisionTree__max_depth  = [3,10,50])   
+
+
         return d_params
 
     def _getKNeighbors(self):
@@ -82,6 +86,11 @@ class Params:
         classifiers
         '''
 
+        d_params = dict(reduce_dim__n_components=[1, 2, 3],
+                        KNeighbors__n_neighbors=[2, 3, 4],
+                        #manhatan, euclidian, Minkowski
+                        KNeighbors__p  = [1,2,3])        
+
         return d_params
 
     def _getSVC(self):
@@ -89,7 +98,10 @@ class Params:
         Return a dictionary of the parameters to be tunned for a SVM 
         classifiers
         '''
-
+        d_params = dict(reduce_dim__n_components=[2, 3],
+                        SVM__kernel=['poly', 'linear', 'rbf'],
+                        SVM__degree = [2, 3, 4],
+                        SVM__C = [0.5, 1.0, 1.5, 2.])
         return d_params
 
     def _getDAdaBoost(self):
@@ -104,6 +116,7 @@ class Params:
                         AdaBoost__base_estimator=l_base_estimator,
                         AdaBoost__n_estimators  = [10, 20, 50, 100])
 
+
         return d_params
 
     def _getGaussianNB(self):
@@ -111,6 +124,7 @@ class Params:
         Return a dictionary of the parameters to be tunned for a GaussianNB
         classifiers
         '''
+        d_params = dict(reduce_dim__n_components=[1, 2, 3])
 
         return d_params
 
@@ -119,6 +133,12 @@ class Params:
         Return a dictionary of the parameters to be tunned for a RandomForest 
         classifiers
         '''
+        # n_estimators
+        # max_depth
+        # min_samples_split
+        d_params = dict(reduce_dim__n_components=[1, 2, 3],
+                        RandomForest__max_depth  = [3,10,50],
+                        RandomForest__n_estimators  = [10, 20, 50, 100])         
 
         return d_params
 
@@ -141,6 +161,17 @@ class Classifier:
                       (s_classifier, d_clf[s_classifier]())]
         self.clf = Pipeline(estimators)
         self.already_tuned = False
+
+    def getFeatureImportance():
+        '''
+        return an array with the feature importance when the classifier is 
+        related to decision tree
+        '''
+        #as I am using PCA, it will return the weight of the PCA components 
+        if self.name in ["DecisionTree", "RandomForest",  "AdaBoost"]:
+            return self.clf.steps[1][1].feature_importances_ 
+
+
     def gridSearch(self, features, labels):
         '''
         Execute a grid search using all data set passed
@@ -168,7 +199,7 @@ class Classifier:
         features: numpy array with the features to be used to test models
         labels: numpy array with the real output 
         '''
-        if self.already_tuned : print "!!!!ALREADY TUNNED\n"
+        if self.already_tuned : print "!!!!ALREADY TUNNED"
         d_rtn = validation.test_classifier(self.clf, features, labels);
         self.d_performance = d_rtn
 
