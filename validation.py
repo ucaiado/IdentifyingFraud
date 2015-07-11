@@ -25,7 +25,7 @@ s+= "\tRecall: {:>0.{display_precision}f}\tF1: {:>0.{display_precision}f}\t"
 s+= "F2: {:>0.{display_precision}f}\n"
 PERF_FORMAT_STRING = s
 
-s = "Confusion Matrix\n------------------\nTotal predictions: {:4d}\t"
+s = "\nConfusion Matrix\n------------------\nTotal predictions: {:4d}\t"
 s+= "True positives: {:4d}\tFalse positives: {:4d}\n\t\t\t\tFalse negatives:"
 s+= " {:4d}\tTrue negatives: {:4d}\n"
 RESULTS_FORMAT_STRING = s
@@ -75,7 +75,8 @@ def test_classifier(clf, features, labels, folds = 1000):
         f1 = 2.0 * true_positives/f_total
         f2 = (1+2.0*2.0) * precision*recall/(4*precision + recall)
         
-        d_rtn = {"accuracy": accuracy, "precision": precision, "f1":f1, "f2":f2,
+        d_rtn = {"accuracy": accuracy, "precision": precision, "recall": recall,
+                 "f1":f1, "f2":f2,
                  "total_predictions": total_predictions, 
                  "true_positives": true_positives,
                  "false_positives": false_positives,
@@ -83,10 +84,21 @@ def test_classifier(clf, features, labels, folds = 1000):
                  "true_negatives": true_negatives
                 }
         
-        print PERF_FORMAT_STRING.format(clf, accuracy, precision, recall, f1, f2, display_precision = 5)
-        print RESULTS_FORMAT_STRING.format(total_predictions, true_positives, false_positives, false_negatives, true_negatives)
-        print ""
+        s_rtn = PERF_FORMAT_STRING.format(clf, accuracy, precision, recall, f1, 
+            f2, display_precision = 5)
+        s_rtn+= RESULTS_FORMAT_STRING.format(total_predictions, true_positives,
+         false_positives, false_negatives, true_negatives)
+        s_rtn+= ""
 
-        return d_rtn
+        return [d_rtn, s_rtn]
     except:
-        print "Got a divide by zero when trying out:", clf
+        d_rtn = {"accuracy": None, "precision": None, "recall": None, 
+                 "f1":None, "f2":None,
+                 "total_predictions": None, 
+                 "true_positives": None,
+                 "false_positives": None,
+                 "false_negatives": None,
+                 "true_negatives": None
+                }
+        s_rtn = "Got a divide by zero when trying out\n{}".format(clf)        
+        return [d_rtn, s_rtn]

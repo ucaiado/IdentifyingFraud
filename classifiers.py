@@ -23,6 +23,7 @@ from sklearn.decomposition import PCA
 from sklearn.grid_search import GridSearchCV
 import validation
 from pprint import pprint
+import pandas as pd
 
 
 
@@ -147,6 +148,93 @@ class Params:
 End of Help Functions
 '''
 
+class MLMethods:
+    '''
+    Hold and train all the ML methods at once
+    '''
+    def __init__(self):
+        '''
+        Initialize a MLMethods instance
+        '''
+        self.d_clf = {
+            "DecisionTree" : Classifier("DecisionTree"), 
+            "KNeighbors" : Classifier("KNeighbors"),
+            "SVM" : Classifier("SVM"),
+            "AdaBoost" : Classifier("AdaBoost"),
+            "GaussianNB" : Classifier("GaussianNB"),
+            "RandomForest" : Classifier("RandomForest")
+        }
+
+    def gridSearchAll(self,features, labels):
+        '''
+        Execute a grid search for the best parameters for the algoritms
+        features: numpy array with the features to be used to test models
+        labels: numpy array with the real output        
+        '''
+        #gridserach all algos
+        for key in self.d_clf:
+            self.d_clf[key].gridSearch(features, labels, report = False)
+        #get a dataframe with the best scores
+        df = self.getSummary('GridSearch')
+        return df
+
+    def crossValidationAll(self,features, labels):
+        '''
+        Cross validate all ML methods at once
+        features: numpy array with the features to be used to test models
+        labels: numpy array with the real output
+        '''
+        #cross validates all algos
+        for key in self.d_clf:
+            self.d_clf[key].crossValidation(features, labels, report = False)
+        #get a dataframe with the APR of each algo
+        df = self.getSummary('crossValidation')
+        return df
+
+    def getReport(self, s_type, s_ml):
+        '''
+        get the report of the results for a specific steps and ML algoritms
+        s_type: string with the name of step DecisionTree__max_depth
+        s_ml: string with the name of the algorithm desired
+        '''
+        if s_type=='crossValidation':
+            self.d_clf[s_ml]. reportCrossValidation()
+        elif s_type=='GridSearch':
+            self.d_clf[s_ml].reportGridSearch()
+
+    def getSummary(self, s_type):
+        '''
+        get a summary for a particular step of all algoritms and return a 
+        dataframe
+        s_type: string with the name of step DecisionTree__max_depth
+        '''
+        l = []
+        #get the best scores fot the tests made by grid search method
+        if s_type=='GridSearch':
+            for key in self.d_clf:
+                f_rtn  = self.d_clf[key].gs_best_score
+                if f_rtn:
+                    d_rtn = {'BestScore':"{0:.4f}".format(f_rtn)}
+                else:
+                    d_rtn = {'BestScore': None}
+                l.append(d_rtn)
+        
+        #get the APR of each ML tested
+        elif s_type=='crossValidation':
+            for key in self.d_clf:
+                d_aux = self.d_clf[key].d_performance
+                d_rtn = {'accuracy': None, 'precision': None,'recall':None}    
+                if d_aux['accuracy']:
+                    for key_2 in ['accuracy','precision','recall']:
+                        d_rtn[key_2] = "{0:.4f}".format(d_aux[key_2])
+                l.append(d_rtn)
+
+        #make a dataframe with the names of each ML as an index
+        df= pd.DataFrame(l)
+        df.index = self.d_clf.keys()
+
+        return df
+
 class Classifier:
     '''
     Train and test different classifiers and show some summaries about its 
@@ -162,7 +250,7 @@ class Classifier:
         self.clf = Pipeline(estimators)
         self.already_tuned = False
 
-    def getFeatureImportance():
+    def getFeatureImportance(self):
         '''
         return an array with the feature importance when the classifier is 
         related to decision tree
@@ -172,11 +260,12 @@ class Classifier:
             return self.clf.steps[1][1].feature_importances_ 
 
 
-    def gridSearch(self, features, labels):
+    def gridSearch(self, features, labels, report = True):
         '''
         Execute a grid search using all data set passed
         features: numpy array with the features to be used to test models
-        labels: numpy array with the real output 
+        labels: numpy array with the real output
+        report: boolean indicating if should print report of results
         '''
         #initialize the grid serach object and look for the best parameters
         d_params = Params(self.name).getDict()   
@@ -185,23 +274,48 @@ class Classifier:
         #update the classifier with the best estimator
         self.clf = grid_search.best_estimator_
         self.already_tuned = True
+        #save all parameters as attributes
+        self.gs_best_score = grid_search.best_score_
+        self.gs_best_params = grid_search.best_params_
         #print a summary
-        print "Best Score: {0:.4f}".format(grid_search.best_score_)
-        print "\nPARAMETERS TESTED\n------------------\n"
+        if report:
+            self.reportGridSearch()
+
+    def reportGridSearch(self):
+        '''
+        print the results of the GridSearchCV method
+        '''
+        d_params = Params(self.name).getDict() 
+        print "Best Score: {0:.4f}".format(self.gs_best_score)
+        print "\nPARAMETERS TESTED\n------------------"
         pprint(d_params)
-        print "\nBEST PARAMETER\n------------------\n"
-        pprint(grid_search.best_params_)
+        print "\nBEST PARAMETER\n------------------"
+        pprint(self.gs_best_params)
+        print "\n"
 
-
-    def crossValidation(self, features, labels): 
+    def crossValidation(self, features, labels, report = True): 
         '''
         Cross validate the data set passed
         features: numpy array with the features to be used to test models
         labels: numpy array with the real output 
         '''
-        if self.already_tuned : print "!!!!ALREADY TUNNED"
-        d_rtn = validation.test_classifier(self.clf, features, labels);
+       
+        d_rtn, s_rtn = validation.test_classifier(self.clf, features, labels);
+        # d_rtn = validation.test_classifier(self.clf, features, labels);
         self.d_performance = d_rtn
+        self.cv_report = s_rtn
+
+        if report:
+            self.reportCrossValidation()
+        # self.d_performance = d_rtn
+        # d_rtn, s_rtn
+
+    def reportCrossValidation(self):
+        '''
+        print the results of the crossValidation method
+        '''
+        if self.already_tuned : print "!!!!ALREADY TUNED"
+        print self.cv_report
 
 
 
