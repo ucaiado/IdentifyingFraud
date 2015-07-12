@@ -34,7 +34,7 @@ def test_classifier(clf, features, labels, folds = 1000):
     '''
     Return a dictionary and print the measurements of precision-recall of the 
     Enron data using stratified shuffle split  cross validation due to the small
-    the size of the dataset
+    size of the dataset
     '''
     cv = StratifiedShuffleSplit(labels, folds, random_state = 42)
     true_negatives = 0
