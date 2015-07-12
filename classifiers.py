@@ -194,7 +194,7 @@ class MLMethods:
     def getReport(self, s_type, s_ml):
         '''
         get the report of the results for a specific steps and ML algoritms
-        s_type: string with the name of step DecisionTree__max_depth
+        s_type: string with the name of step (crossValidation or GridSearch)
         s_ml: string with the name of the algorithm desired
         '''
         if s_type=='crossValidation':
@@ -206,7 +206,7 @@ class MLMethods:
         '''
         get a summary for a particular step of all algoritms and return a 
         dataframe
-        s_type: string with the name of step DecisionTree__max_depth
+        s_type: string with the name of step (crossValidation or GridSearch)
         '''
         l = []
         #get the best scores fot the tests made by grid search method
