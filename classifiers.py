@@ -253,6 +253,18 @@ class MLMethods:
 
         return df
 
+    def get_pcaComponents(self, s_ml):
+        '''
+        Return the PCs with the coefficients for each original feature. It is a 
+        n_components by n_features array
+        s_ml: string with the name of the algorithm desired
+        source: https://discussions.udacity.com/t/interpreting-the-number-of
+        -components-kept-in-pca/25574
+        '''
+        pipeline  = self.d_clf[s_ml].clf
+        my_pca = pipeline.steps[0][1]
+        return my_pca.components_        
+
 class Classifier:
     '''
     Train and test different classifiers and show some summaries about its 
