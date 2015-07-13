@@ -46,7 +46,7 @@ class Params:
     '''
     Hold dictionaries of parameters to be tunned
     '''
-    def __init__(self, s_classifier):
+    def __init__(self, s_classifier=""):
         '''
         Initialize a Params instance
         '''
@@ -62,6 +62,24 @@ class Params:
             self.d = self._getGaussianNB()
         elif s_classifier == "RandomForest": 
             self.d = self._getRandomForest()
+        else:
+            self.d = None
+
+    def printParameters(self):
+        '''
+        Print all parameters tested for each algo
+        '''
+        for s_algo in ["DecisionTree", "KNeighbors", "SVM", "AdaBoost", 
+        "GaussianNB", "RandomForest"]:
+            o_aux = Params(s_algo)
+            print "\n{}\n----------".format(s_algo)
+            d_aux = o_aux.getDict()
+            if s_algo == "AdaBoost":
+                l_aux = [z.get_params()['min_samples_split'] for z 
+                in  d_aux['AdaBoost__base_estimator']]
+                d_aux.pop('AdaBoost__base_estimator')
+                d_aux['AdaBoost__base_estimator_min_samples_split'] = l_aux
+            pprint(d_aux)
 
     def getDict(self):
         '''
@@ -88,7 +106,7 @@ class Params:
         '''
 
         d_params = dict(reduce_dim__n_components=[1, 2, 3],
-                        KNeighbors__n_neighbors=[2, 3, 4],
+                        KNeighbors__n_neighbors=[2, 3, 4, 10, 30],
                         #manhatan, euclidian, Minkowski
                         KNeighbors__p  = [1,2,3])        
 
