@@ -53,21 +53,27 @@ labels, features = targetFeatureSplit(data)
 ### http://scikit-learn.org/stable/modules/pipeline.html
 
 # Provided to give you a starting point. Try a varity of classifiers.
-#### Different classifiers were tested in ipython notebook named Report. Please,
-#### check it out.
-from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()    
+## --------------------------------------------------------------------------##
+## !!Different classifiers were tested in ipython notebook named Report. Please,
+## !!check it out.
+## --------------------------------------------------------------------------##
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.pipeline import Pipeline
+from sklearn.decomposition import PCA
 
 
-
+estimators = [('reduce_dim', PCA()),
+              ('KNeighbors', KNeighborsClassifier())]
+clf = Pipeline(estimators)
 
 ### Task 5: Tune your classifier to achieve better than .3 precision and recall 
 ### using our testing script.
 ### Because of the small size of the dataset, the script uses stratified
 ### shuffle split cross validation. For more info: 
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
-
-
+clf.set_params(KNeighbors__n_neighbors =  4)
+clf.set_params(KNeighbors__p =  2)
+clf.set_params(reduce_dim__n_components =  2)
 
 
 test_classifier(clf, my_dataset, features_list)
