@@ -15,6 +15,8 @@ import pandas as pd
 import numpy as np
 import sys
 import pickle
+import numpy as np
+from sklearn.preprocessing import Imputer
 sys.path.append("tools/")
 
 '''
@@ -85,21 +87,32 @@ class LoadEnron:
         df.drop(l_outliers, inplace= True)
         self.setData(df)
 
-    def fill_and_remove(self, l_features = False, b_remove = True):
+    def fill_and_remove(self, s_strategy="zeros", l_features = False, 
+        b_remove = True):
         '''
         fill all Nan values in numerical data with zeros and then remove data 
         points that all features are equal to zero
         l_features: a list of features to be tested. If any, all features will 
         be used
         b_remove: boolean indicating if should remove keys where all data is 0
+        s_strategy: string with the strategy used to fill NaNs. Can be "mean",
+        "median" and "zeros"
         '''
         df = self.getData()
-        #filling Nan with 0 and exclude them
+        #pre-process data
         if not l_features:
             l_features = self.payments_features + self.stock_features 
             l_features+= self.email_features
         df.loc[:, l_features] = df.loc[:, l_features].astype(float)
-        df.loc[:, l_features] = df.loc[:, l_features].fillna(0)
+        #filling Nan with the strategy selected
+        if s_strategy == "zeros":
+            df.loc[:, l_features] = df.loc[:, l_features].fillna(0)
+        else:
+            na_X = df.loc[:, l_features].values
+            imp = Imputer(missing_values='NaN', strategy=s_strategy, axis=0)
+            df.loc[:, l_features] = imp.fit_transform(na_X)
+
+        #exclude datapoint where every number is equal to 0
         if b_remove:
             df = df.ix[((df.loc[:, l_features]!=0).sum(axis=1)!=0),:]
         #saving the new dataframe       

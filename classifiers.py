@@ -282,6 +282,7 @@ class Classifier:
             estimators = [(s_classifier, d_clf[s_classifier]())]            
         self.clf = Pipeline(estimators)
         self.already_tuned = False
+        self.d_performance = None
 
     def getFeatureImportance(self):
         '''
@@ -325,22 +326,46 @@ class Classifier:
         pprint(self.gs_best_params)
         print "\n"
 
-    def crossValidation(self, features, labels, report = True): 
+    def crossValidation(self, features, labels, report = True, l_columns= None): 
         '''
         Cross validate the data set passed
         features: numpy array with the features to be used to test models
-        labels: numpy array with the real output 
+        labels: numpy array with the real output
+        l_columns: list of labels names for a condensed datframe report
         '''
-       
+        #keep the last data
+        if self.d_performance: d_last= self.d_performance.copy()
+        else: d_last = None
+
+
         d_rtn, s_rtn = validation.test_classifier(self.clf, features, labels);
         # d_rtn = validation.test_classifier(self.clf, features, labels);
         self.d_performance = d_rtn
         self.cv_report = s_rtn
 
+        #print a report
         if report:
             self.reportCrossValidation()
-        # self.d_performance = d_rtn
-        # d_rtn, s_rtn
+
+        if l_columns:
+            #creates a dataframe with the currently accuracy,precision,recall 
+            df_rtn = pd.Series(d_rtn).map(lambda x: '%2.4f' % x)
+            df_rtn = pd.DataFrame(df_rtn)
+            df_rtn.columns = [l_columns[len(l_columns)-1]]
+            df_rtn = df_rtn.ix[["accuracy","precision","recall"],:]
+            #creates a dataframe with the last accuracy,precision,recall
+            if d_last:
+                df_rtn2 = pd.Series(d_last).map(lambda x: '%2.4f' % x)
+                df_rtn2 = pd.DataFrame(df_rtn2)
+                df_rtn2.columns = [l_columns[0]]
+                df_rtn2 = df_rtn2.ix[["accuracy","precision","recall"],:]
+                #create a data frame with 2 columns
+                df_rtn[l_columns[0]] = None
+                df_rtn[l_columns[0]] = list(df_rtn2[l_columns[0]].values)
+                df_rtn = df_rtn.ix[:,l_columns]
+            #return the datafarme
+            return df_rtn
+
 
     def reportCrossValidation(self):
         '''
