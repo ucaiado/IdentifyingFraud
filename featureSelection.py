@@ -87,7 +87,7 @@ class Features(object):
 
         return l_rtn
 
-    def getFeaturesAndLabels(self, o_dataset,o_eda, l_columns = False, 
+    def getFeaturesAndLabels(self, o_dataset,o_eda = None, l_columns = False, 
         scaled = False, f_validNumMin = 0.):
         '''
         Return two nuumpy arrays with labels and features splitted

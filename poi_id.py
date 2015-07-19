@@ -21,23 +21,44 @@ for key in key_to_remove:
     data_dict.pop(key)
 
 ### Task 3: Create new feature(s)
-#### Load the classes created to this project
+
+## --------------------------------------------------------------------------##
+## !! As a bunch of new classes were created to allow me to explore the data in 
+## !! ipython notebook and answer the questions, bellow I am going to use the 
+## !! same classes to clean the data and create new features
+
+#### 1 - Load the classes created to this project
 import dataset
 import featureSelection
 
+##### 2 - creates an object with the dataset loaded using 'LoadEnron' class from  
+##### the dataset.py. It will be used to keep, clean and recover the data
 o_enron = dataset.LoadEnron()
+
+##### 3 - creates an object using 'Features' method from 'featureSelection.py'
+##### that will be used to create new features and scale them 
 o_features = featureSelection.Features()
-#### Clean the data set to look like data_dict
+
+##### 4 - Remove outliers from the data hold by 'o_enron' object and fill "NaN"
+##### values with O (zero). It does the same that 'featureFormat' function will 
+##### do, but I am doing it now to allow me to create new features
 l_exclude = ["BELFER ROBERT","BHATNAGAR SANJAY", "TOTAL"]
 o_enron.excludeOutliers(l_outliers =  l_exclude)
 o_enron.fill_and_remove(b_remove = False)
+
+##### 5 - Use createNewFeatures method from 'o_features' class to modify the 
+##### data hold by 'o_enron' class, inserting new features in the dataset
 o_features.createNewFeatures(o_enron)
 
-####insert features created in data_dict
+##### 6 - Insert the new features in 'data_dict' dictionary using 'getValue'
+##### method from o_eron object
 for key in data_dict:
     for new_feature in ['biggest_expenses', 'percentual_exercised']:
         data_dict[key][new_feature] = o_enron.getValue(key, new_feature)
 
+##!!Now the 'data_dict' dictionary has exactly the same data used in the tests 
+##!!performed in ipython notebook
+## --------------------------------------------------------------------------##
 
 ### Store to my_dataset for easy export below.
 my_dataset = data_dict

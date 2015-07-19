@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''
-Load and different classifiers
+Load and train different classifiers
 
 
 Created on 07/09/2015
@@ -170,17 +170,17 @@ class MLMethods:
     '''
     Hold and train all the ML methods at once
     '''
-    def __init__(self):
+    def __init__(self, usePCA = True):
         '''
         Initialize a MLMethods instance
         '''
         self.d_clf = {
-            "DecisionTree" : Classifier("DecisionTree"), 
-            "KNeighbors" : Classifier("KNeighbors"),
-            "SVM" : Classifier("SVM"),
-            "AdaBoost" : Classifier("AdaBoost"),
-            "GaussianNB" : Classifier("GaussianNB"),
-            "RandomForest" : Classifier("RandomForest")
+            "DecisionTree" : Classifier("DecisionTree", usePCA = usePCA), 
+            "KNeighbors" : Classifier("KNeighbors", usePCA = usePCA),
+            "SVM" : Classifier("SVM", usePCA = usePCA),
+            "AdaBoost" : Classifier("AdaBoost", usePCA = usePCA),
+            "GaussianNB" : Classifier("GaussianNB", usePCA = usePCA),
+            "RandomForest" : Classifier("RandomForest", usePCA = usePCA)
         }
 
     def gridSearchAll(self,features, labels):
@@ -270,13 +270,16 @@ class Classifier:
     Train and test different classifiers and show some summaries about its 
     performance
     '''
-    def __init__(self, s_classifier):
+    def __init__(self, s_classifier, usePCA = True):
         '''
         Initialize a Classifier instance and save all parameters as attributes
         '''
         self.name = s_classifier
-        estimators = [('reduce_dim', PCA()),
-                      (s_classifier, d_clf[s_classifier]())]
+        if usePCA:
+            estimators = [('reduce_dim', PCA()),
+                          (s_classifier, d_clf[s_classifier]())]
+        else:
+            estimators = [(s_classifier, d_clf[s_classifier]())]            
         self.clf = Pipeline(estimators)
         self.already_tuned = False
 
@@ -288,7 +291,6 @@ class Classifier:
         #as I am using PCA, it will return the weight of the PCA components 
         if self.name in ["DecisionTree", "RandomForest",  "AdaBoost"]:
             return self.clf.steps[1][1].feature_importances_ 
-
 
     def gridSearch(self, features, labels, report = True):
         '''
