@@ -21,6 +21,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.grid_search import GridSearchCV
+from sklearn.preprocessing import  MinMaxScaler
 import validation
 from pprint import pprint
 import pandas as pd
@@ -270,16 +271,21 @@ class Classifier:
     Train and test different classifiers and show some summaries about its 
     performance
     '''
-    def __init__(self, s_classifier, usePCA = True):
+    def __init__(self, s_classifier, usePCA = True, scale_on_pipe = False):
         '''
         Initialize a Classifier instance and save all parameters as attributes
         '''
         self.name = s_classifier
-        if usePCA:
-            estimators = [('reduce_dim', PCA()),
-                          (s_classifier, d_clf[s_classifier]())]
-        else:
-            estimators = [(s_classifier, d_clf[s_classifier]())]            
+        #scale the dataset ot not
+
+        if scale_on_pipe: l_scale = [('scale', MinMaxScaler())]
+        else: l_scale=[]
+        #include PCA or not
+        if usePCA: l_pca = [('reduce_dim', PCA())]
+        else: l_pca = []
+        #create the steps of the classifier
+        estimators = l_scale + l_pca + [(s_classifier, d_clf[s_classifier]())]            
+        #create the pipeline
         self.clf = Pipeline(estimators)
         self.already_tuned = False
         self.d_performance = None

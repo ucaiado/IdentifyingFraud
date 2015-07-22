@@ -155,12 +155,13 @@ class Eda(object):
         df_t2 = df.loc[:,["biggest_expenses", "poi"]]
         df_t2 = df_t2.fillna(0)
         #exclude some points just to plot
-        df_t2_plot = df_t2[df_t2.biggest_expenses<0.80]
+        df_t2_plot = df_t2[df_t2.biggest_expenses<0.005]
         #load percentual_exercised feature
         df_t3 = df.loc[:,["percentual_exercised", "poi"]]
         df_t3 = df_t3.fillna(0)        
         f_max = df_t3.percentual_exercised.max()
-        df_t3_plot = df_t3[df_t3.percentual_exercised != f_max]
+        df_t3_plot = df_t3[df_t3.percentual_exercised < 0.10]
+
         #plot the both camparitions in one figure
         f, l_ax = plt.subplots(1,2)
         ax1 = sns.boxplot(x="poi", y="biggest_expenses", 
@@ -168,5 +169,5 @@ class Eda(object):
         ax2 = sns.boxplot(x="poi", y="percentual_exercised",
             data=df_t3_plot, ax = l_ax[1]);
         ax2.set_title("Option Exercised Compared to\n Total Payments");
-        ax1.set_title("How far Is Each One From \nThe Biggest Expense");
+        ax1.set_title("Money from Enron spent by Employees\n Compared to Their Salaries");
         f.tight_layout()        

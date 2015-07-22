@@ -115,22 +115,32 @@ class Features(object):
         #get a copy of the data
         df = o_dataset.getData()
         #compare the expenses to the biggest one scaling it
-        f_min = df.expenses.astype(float).min()
-        f_max = df.expenses.astype(float).max() 
-        df_t2 = (df.expenses.astype(float) - f_min)/(f_max - f_min)
+        # f_min = df.expenses.astype(float).min()
+        # f_max = df.expenses.astype(float).max() 
+        # df_t2 = (df.expenses.astype(float) - f_min)/(f_max - f_min)
+        df_aux = df.salary.astype(float)
+        df_aux[df_aux==0]=None
+        df_t2 = df.expenses.astype(float)/df_aux
         df_t2 = pd.DataFrame(df_t2)
         df_t2.columns = ["biggest_expenses"]
+        # df_t2 = df_t2.fillna(df_t2.mean())
         df_t2["poi"]=df.poi
-        df_t2 = df_t2.fillna(0)
+        # df_t2 = df_t2.fillna(0)
+        #scale the new feature
+        f_min = df_t2.min()
+        f_max = df_t2.max()
+        df_t2 = (df_t2-f_min)/ (f_max - f_min)
         #compare the exercised stock options to total payment
-        l_features =  ['exercised_stock_options', 'total_payments']
-        df_t3 = df[l_features[0]].astype(float)/df[l_features[1]].astype(float)
+        df_aux = df.total_payments.astype(float)
+        df_aux[df_aux==0]=None
+        df_t3 = df.exercised_stock_options.astype(float)/df_aux
         df_t3 = pd.DataFrame(df_t3)
         #scale the new feature
         f_min = df_t3.min()
         f_max = df_t3.max()
         df_t3 = (df_t3-f_min)/ (f_max - f_min)
-        df_t3 = df_t3.fillna(0)
+        # df_t3 = df_t3.fillna(df_t3.mean())
+        # df_t3 = df_t3.fillna(0)
         #exclude some outliers just to this plot
         df_t3.columns = ["percentual_exercised"]
         df_t3["poi"]=df.poi
