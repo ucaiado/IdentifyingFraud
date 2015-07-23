@@ -69,6 +69,7 @@ class Features(object):
         self.email_features = ['from_messages', 'from_poi_to_this_person',
         'from_this_person_to_poi','shared_receipt_with_poi', 'to_messages']
         self.new_features = ['biggest_expenses', 'percentual_exercised']
+        self.total_features = ['total_payments', 'total_stock_value']
        
     def getFeaturesList(self, o_dataset, o_eda, f_validNumMin = 0.):
         '''
@@ -79,7 +80,8 @@ class Features(object):
         o_eda: an object with the eda methods
         '''
         l_columns = self.payments_features + self.stock_features 
-        l_columns+=  self.email_features + self.new_features
+        l_columns+=  self.email_features + self.new_features 
+        l_columns+= self.total_features
         df_rtn = o_eda.notValidNumbersTable(o_dataset)
         na_exclude = (df_rtn.T<f_validNumMin).values
         l_exclude = list(df_rtn.loc[list(na_exclude)[0]].index)        

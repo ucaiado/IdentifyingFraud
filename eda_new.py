@@ -137,7 +137,17 @@ class Eda(object):
         Return a dataframe with the percentual of not NaN values in the data 
         set
         '''
-        df = o_dataset.getData()
+        #recover datasets
+        df = o_dataset.getData(original = True)
+        df2 = o_dataset.getData()
+        #set numbers as floats
+        l_features = [x for x in df.columns if x not in ['email_address','poi']]
+        df.loc[:, l_features] = df.loc[:, l_features].astype(float)
+        #input new variable
+        l_new = ['biggest_expenses', 'percentual_exercised'] 
+        df[l_new]=df2.ix[:,l_new]
+        #count zeros
+        df.fillna(0, inplace = True)
         df_rtn = pd.DataFrame(((df!=0).sum()*1./df.shape[0]))
         df_rtn.columns=["ValidNumbers"]
         df_rtn = df_rtn.sort("ValidNumbers", ascending=False)

@@ -52,14 +52,16 @@ class LoadEnron:
         '''
         data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
         df = pd.DataFrame(data_dict).T
+        self.df_original = df.copy() #alway duplicate the data
         self.df = df
         self.df_scaled = []
 
-    def getData(self, scaled = False):
+    def getData(self, scaled = False, original = False):
         '''
         get a copy of the data set from this instance
         scaled: boolean. Get scaled or non scaled dataframe
         '''
+        if original: return self.df_original.copy()
         if scaled: return self.df_scaled.copy()
         else: return self.df.copy()
 
@@ -102,7 +104,7 @@ class LoadEnron:
         #pre-process data
         if not l_features:
             l_features = self.payments_features + self.stock_features 
-            l_features+= self.email_features
+            l_features+= self.email_features + self.new_features
         df.loc[:, l_features] = df.loc[:, l_features].astype(float)
         #filling Nan with the strategy selected
         if s_strategy == "zeros":
