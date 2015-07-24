@@ -31,6 +31,51 @@ Begin of Help Functions
 '''
 End of Help Functions
 '''
+def precision_recall_curve(f_LoadEnron, f_Classifier, o_features, features_list2):
+    '''
+    Plot a precision recall curve for a KNeighbors algorithm
+    f_LoadEnron: an function called LoadEnron from dataser library
+    f_Classifier:an function called Classifier from Classifiers libarry
+    o_features: and instance from featureSelections'Feature object
+    features_list2: a list of all features to be tested
+    '''
+    #initialize variable
+    o_stats = Eda()
+    l_precision = []
+    l_recall = []
+    l_percentile = range(10,100, 10)
+    for i_perc in l_percentile:
+        #loading data
+        o_enron = f_LoadEnron()
+        o_enron.excludeOutliers(l_outliers =  ["BELFER ROBERT",
+            "BHATNAGAR SANJAY", "TOTAL"])
+        o_features.createNewFeatures(o_enron)
+        o_enron.fill_and_remove(l_features= features_list2,
+            s_strategy="zeros", b_remove=True)
+        #selecting features based on X percentile
+        labels, features= o_features.getFeaturesAndLabels(o_enron, 
+            l_columns=features_list2 , o_eda = o_stats)
+        l_selectedFetures, df_rtn = o_features.select(features, labels, 
+            features_list2, percentile = i_perc) 
+        #exclude datapoint based on X percentile features
+        o_enron.fill_and_remove(l_features= l_selectedFetures,
+            s_strategy="zeros", b_remove=True)
+        #trainf and test the classifier
+        labels, features= o_features.getFeaturesAndLabels(o_enron, 
+            l_columns=l_selectedFetures , o_eda = o_stats)
+        clf2 = f_Classifier("KNeighbors", usePCA = False, scale_on_pipe=False)
+        clf2.crossValidation(features, labels,  report = False, 
+            l_columns= ['aux'])
+        l_precision.append(clf2.d_performance["precision"])
+        l_recall.append(clf2.d_performance["recall"])  
+    #create a data frame
+    df = pd.DataFrame([l_precision, l_recall], columns = l_percentile, 
+        index = ['Precision', 'Recall']).T
+    df.index.name = "Percentile" 
+    #plot precision recall
+    ax = df.plot()
+    ax.set_title("Precision-Recall\n"); 
+
 
 
 
@@ -180,4 +225,4 @@ class Eda(object):
             data=df_t3_plot, ax = l_ax[1]);
         ax2.set_title("Option Exercised Compared to\n Total Payments");
         ax1.set_title("Money from Enron spent by Employees\n Compared to Their Salaries");
-        f.tight_layout()        
+        f.tight_layout()     

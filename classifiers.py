@@ -6,6 +6,8 @@ Load and train different classifiers
 
 
 Created on 07/09/2015
+
+accuracy_score, mean_squared_error, adjusted_rand_index or average_precision 
 '''
 
 __author__='ucaiado'
@@ -21,7 +23,7 @@ from sklearn.naive_bayes import GaussianNB
 from sklearn.pipeline import Pipeline
 from sklearn.decomposition import PCA
 from sklearn.grid_search import GridSearchCV
-from sklearn.preprocessing import  MinMaxScaler
+from sklearn.preprocessing import  MinMaxScaler, StandardScaler
 import validation
 from pprint import pprint
 import pandas as pd
@@ -271,7 +273,8 @@ class Classifier:
     Train and test different classifiers and show some summaries about its 
     performance
     '''
-    def __init__(self, s_classifier, usePCA = True, scale_on_pipe = False):
+    def __init__(self, s_classifier, usePCA = True, scale_on_pipe = False,
+        standardize = False):
         '''
         Initialize a Classifier instance and save all parameters as attributes
         '''
@@ -279,6 +282,7 @@ class Classifier:
         #scale the dataset ot not
 
         if scale_on_pipe: l_scale = [('scale', MinMaxScaler())]
+        elif standardize: l_scale = [('scale', StandardScaler())]
         else: l_scale=[]
         #include PCA or not
         if usePCA: l_pca = [('reduce_dim', PCA())]

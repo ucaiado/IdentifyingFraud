@@ -20,7 +20,7 @@ Begin of Help Functions
 '''
 
 
-def selectFeatures(features, labels, features_list):
+def selectFeatures(features, labels, features_list, percentile= 20):
     '''
     Select features according to the 20th percentile of the highest scores. 
     Return a list of features selected  and a dataframe showing the ranking 
@@ -28,9 +28,10 @@ def selectFeatures(features, labels, features_list):
     features: numpy array with the features to be used to test sklearn models
     labels: numpy array with the real output 
     features_list: a list of names of each feature
+    percentile: int with percentile to be used to select features
     '''
     #feature selection
-    selector = SelectPercentile(f_classif, percentile=20)
+    selector = SelectPercentile(f_classif, percentile=percentile)
     selector.fit(features, labels)
     features_transformed = selector.transform(features)
     #filter names to be returned
@@ -81,7 +82,6 @@ class Features(object):
         '''
         l_columns = self.payments_features + self.stock_features 
         l_columns+=  self.email_features + self.new_features 
-        l_columns+= self.total_features
         df_rtn = o_eda.notValidNumbersTable(o_dataset)
         na_exclude = (df_rtn.T<f_validNumMin).values
         l_exclude = list(df_rtn.loc[list(na_exclude)[0]].index)        
@@ -175,7 +175,7 @@ class Features(object):
         #keep results and show description
         o_dataset.df_scaled = df
 
-    def select(self, features, labels, features_list):
+    def select(self, features, labels, features_list, percentile= 20):
         '''
         Select features using selectFeatures function. Return a list with the 
         features selected  and a p-values ranking.
@@ -183,7 +183,8 @@ class Features(object):
         labels: numpy array with the real output 
         features_list: a list of names of each feature
         '''
-        l_rtn, df_rtn = selectFeatures(features, labels, features_list)
+        l_rtn, df_rtn = selectFeatures(features, labels, features_list, 
+            percentile= percentile)
         return l_rtn, df_rtn 
 
         
