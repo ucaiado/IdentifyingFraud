@@ -104,7 +104,7 @@ class LoadEnron:
         #pre-process data
         if not l_features:
             l_features = self.payments_features + self.stock_features 
-            l_features+= self.email_features + self.new_features
+            l_features+= self.email_features
         df.loc[:, l_features] = df.loc[:, l_features].astype(float)
         #filling Nan with the strategy selected
         if s_strategy == "zeros":

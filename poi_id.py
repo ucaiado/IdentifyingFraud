@@ -10,7 +10,8 @@ from tester import test_classifier, dump_classifier_and_data
 ### Task 1: Select what features you'll use.
 ### features_list is a list of strings, each of which is a feature name.
 ### The first feature must be "poi".
-features_list = ['poi', 'bonus', 'salary', 'exercised_stock_options']
+features_list = ['poi', 'bonus',  'deferred_income',  'salary', 
+'exercised_stock_options']
 
 ### Load the dictionary containing the dataset
 data_dict = pickle.load(open("final_project_dataset.pkl", "r") )
@@ -93,7 +94,7 @@ clf = Pipeline(estimators)
 ### shuffle split cross validation. For more info: 
 ### http://scikit-learn.org/stable/modules/generated/sklearn.cross_validation.StratifiedShuffleSplit.html
 clf.set_params(KNeighbors__n_neighbors =  4)
-clf.set_params(KNeighbors__p =  2)
+clf.set_params(KNeighbors__p =  3)
 clf.set_params(reduce_dim__n_components =  2)
 
 

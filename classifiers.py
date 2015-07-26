@@ -186,17 +186,86 @@ class MLMethods:
             "RandomForest" : Classifier("RandomForest", usePCA = usePCA)
         }
 
-    def gridSearchAll(self,features, labels):
+    def crossValidationAndScoringAll(self,features, labels, l_ignore = []):
+        '''
+        Create a dataframe withh all results from crossValidationAll method
+        varying the scoring parameter
+        features: numpy array with the features to be used to test models
+        labels: numpy array with the real output
+        l_ignore: list of algos to ignore        
+        '''
+        #grid search all
+        #by f1
+        self.gridSearchAll(features, labels, l_ignore, 
+            scoring="f1")
+        df_f1 = self.crossValidationAll(features, labels)
+        #by recall
+        self.gridSearchAll(features, labels, l_ignore, 
+            scoring="recall")
+        df_recall = self.crossValidationAll(features, labels)
+        #by accuracy
+        self.gridSearchAll(features, labels, l_ignore, 
+            scoring="accuracy")
+        df_accuracy = self.crossValidationAll(features, labels)
+        #by precision
+        self.gridSearchAll(features, labels, l_ignore, 
+            scoring="average_precision")
+        df_precision = self.crossValidationAll(features, labels)        
+        #merge dataframes
+        df_f1['scoring']= 'f1'
+        df_precision['scoring']= 'precision'
+        df_recall['scoring']= 'recall'
+        df_accuracy['scoring']= 'accuracy'
+        df_f1.reset_index(inplace=True)
+        df_precision.reset_index(inplace=True)
+        df_recall.reset_index(inplace=True)
+        df_accuracy.reset_index(inplace=True)
+        df = pd.DataFrame(list(df_f1.values) + list(df_precision.values) + 
+            list(df_recall.values) + list(df_accuracy.values))
+        df.columns = ['algo']+list(df_accuracy.columns[1:])
+        df = df.groupby(['scoring','algo']).sum()
+        return df
+
+
+    def gridSearchAndScoringAll(self, features, labels, l_ignore = []):
+        '''
+        perform a gridSearchAll varying the scoring function
+        features: numpy array with the features to be used to test models
+        labels: numpy array with the real output
+        l_ignore: list of algos to ignore 
+        s_what = string "all" or "merged" to indicate what to return 
+        '''
+        df_f1 = self.gridSearchAll(features, labels, l_ignore,
+         scoring="f1")
+        df_recall = self.gridSearchAll(features, labels, l_ignore,
+         scoring="recall")
+        df_accuracy = self.gridSearchAll(features, labels, l_ignore,
+         scoring="accuracy")
+        df_precision = self.gridSearchAll(features, labels, l_ignore,
+         scoring="average_precision")
+        df_all = df_f1.copy()
+        df_all.columns=['f1']
+        df_all['precision']=df_precision.values
+        df_all['recall']=df_recall.values
+        df_all['accuracy']=df_accuracy.values
+        return df_all
+
+    def gridSearchAll(self,features, labels, l_ignore = [], scoring="accuracy"):
         '''
         Execute a grid search for the best parameters for the algoritms
         features: numpy array with the features to be used to test models
-        labels: numpy array with the real output        
+        labels: numpy array with the real output
+        l_ignore: list of algos to ignore
+        scoring: string with the kind of scoring used to classified the better
+        algo     
         '''
         #gridserach all algos
         for key in self.d_clf:
-            self.d_clf[key].gridSearch(features, labels, report = False)
+            if key not in l_ignore:
+                self.d_clf[key].gridSearch(features, labels, report = False,
+                 scoring=scoring)
         #get a dataframe with the best scores
-        df = self.getSummary('GridSearch')
+        df = self.getSummary('GridSearch', l_ignore = l_ignore)
         return df
 
     def crossValidationAll(self,features, labels):
@@ -223,22 +292,26 @@ class MLMethods:
         elif s_type=='GridSearch':
             self.d_clf[s_ml].reportGridSearch()
 
-    def getSummary(self, s_type):
+    def getSummary(self, s_type, l_ignore = []):
         '''
         get a summary for a particular step of all algoritms and return a 
         dataframe
         s_type: string with the name of step (crossValidation or GridSearch)
+        l_ignore: list of algos to ignore  
         '''
         l = []
+        l_index = []
         #get the best scores fot the tests made by grid search method
         if s_type=='GridSearch':
             for key in self.d_clf:
-                f_rtn  = self.d_clf[key].gs_best_score
-                if f_rtn:
-                    d_rtn = {'BestScore':"{0:.4f}".format(f_rtn)}
-                else:
-                    d_rtn = {'BestScore': None}
-                l.append(d_rtn)
+                if key not in l_ignore:
+                    f_rtn  = self.d_clf[key].gs_best_score
+                    if f_rtn:
+                        d_rtn = {'BestScore':"{0:.4f}".format(f_rtn)}
+                    else:
+                        d_rtn = {'BestScore': None}
+                    l.append(d_rtn)
+                    l_index.append(key)
         
         #get the APR of each ML tested
         elif s_type=='crossValidation':
@@ -249,10 +322,11 @@ class MLMethods:
                     for key_2 in ['accuracy','precision','recall']:
                         d_rtn[key_2] = "{0:.4f}".format(d_aux[key_2])
                 l.append(d_rtn)
+                l_index.append(key)
 
         #make a dataframe with the names of each ML as an index
         df= pd.DataFrame(l)
-        df.index = self.d_clf.keys()
+        df.index = l_index
 
         return df
 
@@ -303,7 +377,7 @@ class Classifier:
         if self.name in ["DecisionTree", "RandomForest",  "AdaBoost"]:
             return self.clf.steps[1][1].feature_importances_ 
 
-    def gridSearch(self, features, labels, report = True):
+    def gridSearch(self, features, labels, report = True, scoring = "accuracy"):
         '''
         Execute a grid search using all data set passed
         features: numpy array with the features to be used to test models
@@ -312,7 +386,8 @@ class Classifier:
         '''
         #initialize the grid serach object and look for the best parameters
         d_params = Params(self.name).getDict()   
-        grid_search = GridSearchCV(self.clf, param_grid=d_params)
+        grid_search = GridSearchCV(self.clf, param_grid=d_params, 
+            scoring = scoring)
         grid_search.fit(features, labels)
         #update the classifier with the best estimator
         self.clf = grid_search.best_estimator_
